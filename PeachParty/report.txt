@@ -1,0 +1,23 @@
+1. My BankSquare detects Player co-location through a function derived from its base Square class. The Square class's doSomething() function passes in a Player pointer (gotten from the function getPeach() or getYoshi() in StudentWorld) to the function checkNewActorOnSameSquare(Actor* actor), which is itself derived from the base Actor class (line 32 in Actor.cpp). This function compares the coordinates of the passed-in Actor (through getX() and getY() derived from GraphObject) with the coordinates of the BankSquare (also using the same functions). If both sets of coordinates match and a boolean member variable (either m_peachOnSquare or m_yoshiOnSquare, depending on Player passed in) inside Actor is false, the boolean is then set to true so the BankSquare does not activate multiple times and the function returns true, detecting that the Player has newly moved onto the BankSquare. 
+
+If checkNewActorOnSameSquare() returns true for a Player, Square's doSomething() then checks for the Player's state.
+If the state is "waiting_to_roll," the Player pointer is passed into newPlayerLandAction(Player* p). Otherwise if the Player's state is "walking", the Player pointer is passed into newPlayerMoveAction(Player* p). Both newPlayerLandAction(Player* p) and newPlayerMoveAction(Player* p) are pure virtual within the Square class and defined within the BankSquare class. 
+
+Here are all the major functions that are then used:
+getWorld() is a function derived from Actor that returns a pointer to StudentWorld.
+getBank() is a function within StudentWorld that returns the value of member variable m_bank, the number of coins in the bank. 
+setBank(int coins) is a function within StudentWorld that sets m_bank to the specified number of coins.
+playSound(int SoundID) is a function derived from GameWorld within that plays the specified sound. 
+addCoins(int coins) is a function within Player that adds the specified number of coins to m_coins. m_coins has a min value of 0.
+getCoins() is a function within Player that returns the value of member variable m_coins, the number of coins the Player has. 
+
+
+newPlayerLandAction(Player* p) calls its helper function withdrawBank(Player* p). This function calls p->addCoins(getWorld()->getBank()), which gets the number of coins in the bank from StudentWorld and tells the Player to add that number of coins to m_coins. Next, it tells StudentWorld to reset the number of coins in the bank through getWorld()->setBank(0). Lastly, it tells StudentWorld to play the correct sound through getWorld()->playSound(SOUND_WITHDRAW_BANK).
+
+newPlayerMoveAction(Player* p) calls its helper function depositBank(Player* p). The function first tells Player to give its number of coins, finding min(5, p->getCoins()) and storing the value in int coinsToDeposit. It then tells Player to subtract this number of coins from itself with p->addCoins(-coinsToDeposit). Next, the function tells StudentWorld to increment m_bank by coinsToDeposit with getWorld()->setBank(getWorld()->getBank() + coinsToDeposit). Lastly, StudentWorld is told to play the correct sound through getWorld()->playSound(SOUND_DEPOSIT_BANK).
+
+2. To the best of my knowledge, my game is fully functional without bugs. 
+
+3. The spec did not specify whether an event square should activate on the same player again if the player got swapped to the same square it was already on. I decided to have the event square not activate a second time. 
+
+The spec gives an example StudentWorld move() function that updates the game stat text in the same tick that an event occurs. However, the sample executable's game stat text is always one tick behind. For example, Yoshi can land on a coin square that gives it 3 coins, playing the sound in the process. Only in the next tick would the game stat text update to reflect this change. I opted to follow the sample executable's behavior and have my stat text update one tick behind. 
